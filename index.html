@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tr('Feishin Now Playing')</title>
+  <link rel="icon" type="image/svg+xml" href="resources/icon.svg">
+
+  <meta name="x-icue-restrictions" data-restrictions='[{ "device": "dashboard_lcd" }]'>
+  <meta name="x-icue-widget-group" content="tr('Media')">
+
+  <script type="text/javascript" src="../common/tools/media_viewer/MediaViewer.js"></script>
+  <link rel="stylesheet" type="text/css" href="../common/tools/media_viewer/MediaViewer.css">
+  <script type="text/javascript" src="scripts/md5.js"></script>
+
+  <!-- Feature properties -->
+  <meta name="x-icue-property" content="serverUrl" data-label="tr('Navidrome Server URL')" data-type="textfield" data-default="'https://navidrome.jwowk.net'">
+  <meta name="x-icue-property" content="username" data-label="tr('Username')" data-type="textfield" data-default="''">
+  <meta name="x-icue-property" content="password" data-label="tr('Password')" data-type="textfield" data-default="''">
+  <meta name="x-icue-property" content="onlyMyPlays" data-label="tr('Only My Plays')" data-type="switch" data-default="true">
+  <meta name="x-icue-property" content="refreshSeconds" data-label="tr('Refresh Interval')" data-type="slider" data-default="10" data-min="5" data-max="60" data-step="5" data-unit-label="'s'">
+
+  <!-- Widget Personalization -->
+  <meta name="x-icue-property" content="textColor" data-label="tr('Text Color')" data-type="color" data-default="'#ffffff'">
+  <meta name="x-icue-property" content="accentColor" data-label="tr('Accent Color')" data-type="color" data-default="'#22d3ee'">
+  <meta name="x-icue-property" content="backgroundColor" data-label="tr('Background Color')" data-type="color" data-default="'#15161c'">
+  <meta name="x-icue-property" content="backgroundMedia" data-label="tr('Background Image')" data-type="media-selector" data-filters="['*.png','*.jpg','*.jpeg','*.webp']">
+  <meta name="x-icue-property" content="glassBlur" data-label="tr('Glass Blur')" data-type="slider" data-default="0" data-min="0" data-max="30" data-step="1">
+  <meta name="x-icue-property" content="transparency" data-label="tr('Background Transparency')" data-type="slider" data-default="100" data-min="0" data-max="100" data-step="1" data-unit-label="'%'">
+
+  <script id="x-icue-groups" type="application/json">
+  [
+    { "title": "tr('Feishin Now Playing')", "properties": ["serverUrl", "username", "password", "onlyMyPlays", "refreshSeconds"] },
+    { "title": "tr('Widget Personalization')", "properties": ["textColor", "accentColor", "backgroundColor", "backgroundMedia", "glassBlur", "transparency"] }
+  ]
+  </script>
+
+  <link rel="stylesheet" type="text/css" href="styles/FeishinNowPlaying.css">
+</head>
+<body>
+  <div class="widget-root">
+    <div class="widget-background" aria-hidden="true">
+      <div class="main-glass"></div>
+      <div id="media-background"></div>
+      <div id="art-backdrop"></div>
+    </div>
+
+    <div class="main-content">
+      <div class="loading-state state-panel">
+        <div class="spinner"></div>
+        <div class="state-text">Connecting…</div>
+      </div>
+
+      <div class="error-state state-panel" style="display:none;">
+        <svg class="state-icon" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2 1 21h22L12 2zm0 6c.6 0 1 .4 1 1v5a1 1 0 0 1-2 0V9c0-.6.4-1 1-1zm0 9.2a1.2 1.2 0 1 1 0 2.4 1.2 1.2 0 0 1 0-2.4z"/></svg>
+        <div class="state-text error-text">Can't reach Navidrome</div>
+        <div class="state-sub error-detail"></div>
+      </div>
+
+      <div class="setup-state state-panel" style="display:none;">
+        <svg class="state-icon" viewBox="0 0 24 24"><path fill="currentColor" d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6z"/></svg>
+        <div class="state-text">Connect to Navidrome</div>
+        <div class="state-sub">Widget settings &rarr; server URL, username, password</div>
+      </div>
+
+      <div class="idle-state state-panel" style="display:none;">
+        <svg class="state-icon dim" viewBox="0 0 24 24"><path fill="currentColor" d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6z"/></svg>
+        <div class="state-text">Nothing playing</div>
+        <div class="recent-strip" id="recentStrip"></div>
+        <div class="state-sub">Recently added</div>
+      </div>
+
+      <div class="content" style="display:none;">
+        <div class="np-layout">
+          <div class="art-wrap">
+            <img class="album-art" id="albumArt" alt="">
+            <div class="eq" id="eqBars" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+          </div>
+          <div class="np-info">
+            <div class="np-status" id="npStatus">
+              <span class="np-dot"></span><span id="npStatusText">NOW PLAYING</span>
+            </div>
+            <div class="np-title hero-value" id="npTitle">—</div>
+            <div class="np-artist" id="npArtist">—</div>
+            <div class="np-album" id="npAlbum">—</div>
+            <div class="np-meta" id="npMeta"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    icueEvents = {
+      'onDataUpdated': onIcueDataUpdated,
+      'onICUEInitialized': onIcueInitialized,
+      'onUpdateRequested': onUpdateRequested
+    };
+
+    let languageCode = 'en';
+
+    function getIcueProperty(name) {
+      if (typeof window !== 'undefined' && Object.prototype.hasOwnProperty.call(window, name)) {
+        const value = window[name];
+        if (value !== undefined && value !== null && value !== '') return value;
+      }
+      try {
+        const value = Function('return typeof ' + name + ' !== "undefined" ? ' + name + ' : undefined')();
+        if (value !== undefined && value !== null && value !== '') return value;
+      } catch (e) {}
+      return undefined;
+    }
+
+    function clampRange(v, min, max, d) {
+      v = Number(v);
+      if (!Number.isFinite(v)) return d;
+      return Math.max(min, Math.min(max, v));
+    }
+
+    /* ---------- Media background ---------- */
+    const mediaMount = document.getElementById('media-background');
+    function createMediaBackgroundComponent(container) {
+      if (!container) return { clear: function () {}, loadMedia: function () {} };
+      if (typeof MediaViewer === 'function') {
+        const viewer = new MediaViewer({
+          container: container,
+          onMediaLoaded: function () { container.classList.add('has-media'); },
+          onMediaError: function (err) { container.classList.remove('has-media'); console.error(err); }
+        });
+        return {
+          clear: function () { viewer.clear(); container.classList.remove('has-media'); },
+          loadMedia: function (c) { viewer.loadMedia(c); }
+        };
+      }
+      return {
+        clear: function () { container.style.backgroundImage = ''; container.classList.remove('has-media'); },
+        loadMedia: function (c) {
+          const p = c && (c.path || c.pathToAsset);
+          if (!p) { this.clear(); return; }
+          container.style.backgroundImage = "url('" + p + "')";
+          container.style.backgroundSize = 'cover';
+          container.style.backgroundPosition = 'center';
+          container.classList.add('has-media');
+        }
+      };
+    }
+    const mediaBackgroundComponent = createMediaBackgroundComponent(mediaMount);
+
+    function applyStyles() {
+      const root = document.documentElement;
+      root.style.setProperty('--bg-opacity', clampRange(getIcueProperty('transparency'), 0, 100, 100) / 100);
+      const tc = getIcueProperty('textColor');
+      const ac = getIcueProperty('accentColor');
+      const bgc = getIcueProperty('backgroundColor');
+      root.style.setProperty('--text-color', (typeof tc === 'string' && tc) ? tc : '#ffffff');
+      root.style.setProperty('--accent-color', (typeof ac === 'string' && ac) ? ac : '#22d3ee');
+      root.style.setProperty('--bg-color', (typeof bgc === 'string' && bgc) ? bgc : '#15161c');
+      root.style.setProperty('--bg-blur', clampRange(getIcueProperty('glassBlur'), 0, 30, 0) + 'px');
+      const bgMedia = getIcueProperty('backgroundMedia');
+      if (!bgMedia) { mediaBackgroundComponent.clear(); return; }
+      mediaBackgroundComponent.loadMedia({
+        path: bgMedia.pathToAsset,
+        baseWidth: bgMedia.baseWidth,
+        baseHeight: bgMedia.baseHeight,
+        scale: bgMedia.scale, positionX: bgMedia.positionX,
+        positionY: bgMedia.positionY, angle: bgMedia.angle
+      });
+    }
+
+    function showState(state) {
+      ['loading-state', 'error-state', 'setup-state', 'idle-state', 'content'].forEach(s => {
+        const el = document.querySelector('.' + s);
+        if (el) el.style.display = s === state ? '' : 'none';
+      });
+    }
+
+    /* ---------- Subsonic API ---------- */
+    let refreshTimer = null;
+    let fetchInFlight = false;
+    let lastTrackKey = '';
+
+    function subsonicParams() {
+      const user = (getIcueProperty('username') || '').toString().trim();
+      const pass = (getIcueProperty('password') || '').toString();
+      if (!user || !pass) return null;
+      const salt = Math.random().toString(36).slice(2, 12);
+      const token = md5(pass + salt);
+      return 'u=' + encodeURIComponent(user) + '&t=' + token + '&s=' + salt +
+             '&v=1.16.1&c=icue-feishin&f=json';
+    }
+
+    function serverBase() {
+      const u = (getIcueProperty('serverUrl') || '').toString().trim();
+      return u.replace(/\/+$/, '');
+    }
+
+    async function subsonicGet(endpoint, extra) {
+      const params = subsonicParams();
+      if (!params) return null;
+      const url = serverBase() + '/rest/' + endpoint + '?' + params + (extra ? '&' + extra : '');
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      const sr = data['subsonic-response'];
+      if (!sr || sr.status !== 'ok') {
+        const err = new Error((sr && sr.error && sr.error.message) || 'Subsonic error');
+        err.code = sr && sr.error && sr.error.code;
+        throw err;
+      }
+      return sr;
+    }
+
+    function coverUrl(coverArt, size) {
+      const params = subsonicParams();
+      if (!params || !coverArt) return '';
+      return serverBase() + '/rest/getCoverArt.view?' + params +
+             '&id=' + encodeURIComponent(coverArt) + '&size=' + (size || 600);
+    }
+
+    function fmtDuration(sec) {
+      if (!sec) return '';
+      const m = Math.floor(sec / 60), s = sec % 60;
+      return m + ':' + String(s).padStart(2, '0');
+    }
+
+    async function loadNowPlaying() {
+      if (!serverBase() || !subsonicParams()) { showState('setup-state'); return; }
+      if (fetchInFlight) return;
+      fetchInFlight = true;
+      try {
+        const sr = await subsonicGet('getNowPlaying.view');
+        let entries = (sr.nowPlaying && sr.nowPlaying.entry) || [];
+        if (!Array.isArray(entries)) entries = [entries];
+
+        const me = (getIcueProperty('username') || '').toString().trim().toLowerCase();
+        if (getIcueProperty('onlyMyPlays') !== false && me) {
+          const mine = entries.filter(e => (e.username || '').toLowerCase() === me);
+          if (mine.length) entries = mine;
+        }
+        entries.sort((a, b) => (a.minutesAgo || 0) - (b.minutesAgo || 0));
+        const np = entries[0];
+
+        // Consider it "playing" if scrobbled within the last ~8 minutes
+        if (np && (np.minutesAgo === undefined || np.minutesAgo <= 8)) {
+          renderNowPlaying(np);
+        } else {
+          await renderIdle();
+        }
+      } catch (e) {
+        console.error('Navidrome fetch failed:', e);
+        if (e.code === 40) {
+          showState('error-state');
+          document.querySelector('.error-detail').textContent = 'Wrong username or password';
+        } else {
+          showState('error-state');
+          document.querySelector('.error-detail').textContent = 'Check server URL in settings';
+        }
+      } finally {
+        fetchInFlight = false;
+      }
+    }
+
+    function renderNowPlaying(np) {
+      const key = np.id + '|' + np.username;
+      document.getElementById('npTitle').textContent = np.title || '—';
+      document.getElementById('npArtist').textContent = np.artist || '—';
+      document.getElementById('npAlbum').textContent = np.album || '';
+      const bits = [];
+      if (np.year) bits.push(np.year);
+      if (np.duration) bits.push(fmtDuration(np.duration));
+      if (np.minutesAgo > 0) bits.push(np.minutesAgo + 'm ago');
+      document.getElementById('npMeta').textContent = bits.join(' • ');
+      document.getElementById('npStatusText').textContent =
+        (np.minutesAgo || 0) <= 1 ? 'NOW PLAYING' : 'RECENTLY PLAYED';
+
+      if (key !== lastTrackKey) {
+        lastTrackKey = key;
+        const art = document.getElementById('albumArt');
+        const url = coverUrl(np.coverArt, 600);
+        art.src = url;
+        const backdrop = document.getElementById('art-backdrop');
+        backdrop.style.backgroundImage = url ? "url('" + url + "')" : '';
+      }
+      showState('content');
+    }
+
+    async function renderIdle() {
+      showState('idle-state');
+      const strip = document.getElementById('recentStrip');
+      if (strip.childElementCount > 0) return; // already populated this session
+      try {
+        const sr = await subsonicGet('getAlbumList2.view', 'type=newest&size=8');
+        let albums = (sr.albumList2 && sr.albumList2.album) || [];
+        if (!Array.isArray(albums)) albums = [albums];
+        strip.innerHTML = '';
+        albums.slice(0, 8).forEach(a => {
+          const img = document.createElement('img');
+          img.className = 'recent-art';
+          img.src = coverUrl(a.coverArt, 200);
+          img.title = (a.name || '') + ' — ' + (a.artist || '');
+          strip.appendChild(img);
+        });
+      } catch (e) { /* idle strip is best-effort */ }
+    }
+
+    /* ---------- Lifecycle ---------- */
+    function scheduleRefresh() {
+      if (refreshTimer) clearInterval(refreshTimer);
+      const secs = clampRange(getIcueProperty('refreshSeconds'), 5, 60, 10);
+      refreshTimer = setInterval(loadNowPlaying, secs * 1000);
+    }
+
+    function onUpdateRequested() { loadNowPlaying(); }
+
+    function onIcueDataUpdated() {
+      applyStyles();
+      scheduleRefresh();
+      loadNowPlaying();
+    }
+
+    function onIcueInitialized() {
+      if (typeof iCUE !== 'undefined' && iCUE.iCUELanguage) languageCode = iCUE.iCUELanguage;
+      onIcueDataUpdated();
+    }
+
+    if (typeof iCUE_initialized !== 'undefined' && iCUE_initialized) {
+      onIcueInitialized();
+    } else {
+      onIcueDataUpdated();
+    }
+  </script>
+</body>
+</html>

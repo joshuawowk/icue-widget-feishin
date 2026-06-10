@@ -1,0 +1,17 @@
+{
+  "author": "Josh Wowk",
+  "id": "net.jwowk.icue.feishin",
+  "name": "Feishin Now Playing",
+  "description": "Now-playing widget for Feishin/Navidrome on Xeneon Edge — album art, track info, animated EQ indicator, and a recently-added strip when idle. Talks directly to your Navidrome server via the Subsonic API.",
+  "version": "1.0.0",
+  "preview_icon": "resources/icon.png",
+  "min_framework_version": "1.0.0",
+  "os": [
+    { "platform": "windows" },
+    { "platform": "mac" }
+  ],
+  "supported_devices": [
+    { "type": "dashboard_lcd", "features": ["sensor-screen"] }
+  ],
+  "interactive": true
+}

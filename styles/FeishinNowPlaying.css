@@ -1,0 +1,302 @@
+/* Feishin Now Playing — Xeneon Edge widget
+   Album art + track info with blurred art backdrop and animated EQ. */
+
+:root {
+  --text-color: #ffffff;
+  --accent-color: #22d3ee;
+  --bg-color: #15161c;
+  --bg-opacity: 1;
+  --bg-blur: 0px;
+
+  --layout-unit: 1vmin;
+  --device-vertical-s-unit: 4.16px;
+  --preview-vertical-s-unit: calc(100vw * 416 / 69600);
+
+  --space-pad: calc(var(--layout-unit) * 5);
+  --radius-card: calc(var(--layout-unit) * 3);
+
+  --font-hero: calc(var(--layout-unit) * 7.5);
+  --font-artist: calc(var(--layout-unit) * 4.6);
+  --font-album: calc(var(--layout-unit) * 3.4);
+  --font-meta: calc(var(--layout-unit) * 2.9);
+  --font-label: calc(var(--layout-unit) * 2.8);
+
+  --art-size: calc(var(--layout-unit) * 56);
+}
+
+html { overflow: hidden; }
+
+body {
+  margin: 0;
+  padding: 0;
+  width: 100vw;
+  height: 100vh;
+  font-family: OpenSans, "Segoe UI", Arial, sans-serif;
+  background: transparent;
+}
+
+.widget-root {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  color: var(--text-color);
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* ---------- Background ---------- */
+.widget-background {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  z-index: 0;
+  opacity: var(--bg-opacity);
+  transition: opacity 0.2s ease;
+}
+.main-glass { position: absolute; inset: 0; background-color: var(--bg-color); }
+#media-background { width: 100%; height: 100%; position: absolute; inset: 0; filter: blur(var(--bg-blur)); }
+
+/* Blurred album-art backdrop behind everything */
+#art-backdrop {
+  position: absolute;
+  inset: -10%;
+  background-size: cover;
+  background-position: center;
+  filter: blur(40px) brightness(0.35) saturate(1.3);
+  transition: background-image 0.6s ease;
+}
+
+.main-content {
+  position: relative;
+  z-index: 2;
+  box-sizing: border-box;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-pad);
+}
+
+/* ---------- States ---------- */
+.state-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: calc(var(--layout-unit) * 2);
+  height: 100%;
+  text-align: center;
+}
+.state-icon {
+  width: calc(var(--layout-unit) * 11);
+  height: calc(var(--layout-unit) * 11);
+  color: var(--accent-color);
+  opacity: 0.9;
+}
+.state-icon.dim { opacity: 0.4; }
+.state-text { font-size: calc(var(--layout-unit) * 5); font-weight: 600; }
+.state-sub  { font-size: var(--font-meta); opacity: 0.6; line-height: 1.5; }
+.error-text { color: #f87171; }
+
+.spinner {
+  width: calc(var(--layout-unit) * 9);
+  height: calc(var(--layout-unit) * 9);
+  border: calc(var(--layout-unit) * 0.9) solid color-mix(in srgb, var(--accent-color) 25%, transparent);
+  border-top-color: var(--accent-color);
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.recent-strip {
+  display: flex;
+  gap: calc(var(--layout-unit) * 2);
+  justify-content: center;
+  flex-wrap: wrap;
+  max-width: 90%;
+}
+.recent-art {
+  width: calc(var(--layout-unit) * 14);
+  height: calc(var(--layout-unit) * 14);
+  border-radius: calc(var(--layout-unit) * 1.5);
+  object-fit: cover;
+  opacity: 0.85;
+  box-shadow: 0 calc(var(--layout-unit) * 0.8) calc(var(--layout-unit) * 2.5) rgba(0,0,0,0.5);
+}
+
+/* ---------- Now playing ---------- */
+.content {
+  height: 100%;
+  display: flex;
+  min-height: 0;
+}
+
+.np-layout {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: calc(var(--layout-unit) * 6);
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.art-wrap {
+  position: relative;
+  flex: 0 0 auto;
+  width: var(--art-size);
+  height: var(--art-size);
+  max-width: 42%;
+}
+.album-art {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: var(--radius-card);
+  box-shadow: 0 calc(var(--layout-unit) * 1.5) calc(var(--layout-unit) * 5) rgba(0,0,0,0.6);
+  background: color-mix(in srgb, var(--text-color) 8%, transparent);
+}
+
+/* EQ bars overlay, bottom-right of art */
+.eq {
+  position: absolute;
+  right: calc(var(--layout-unit) * 2);
+  bottom: calc(var(--layout-unit) * 2);
+  display: flex;
+  align-items: flex-end;
+  gap: calc(var(--layout-unit) * 0.7);
+  height: calc(var(--layout-unit) * 5);
+  padding: calc(var(--layout-unit) * 1.2);
+  background: rgba(0, 0, 0, 0.55);
+  border-radius: calc(var(--layout-unit) * 1.2);
+}
+.eq span {
+  width: calc(var(--layout-unit) * 1);
+  background: var(--accent-color);
+  border-radius: calc(var(--layout-unit) * 0.4);
+  animation: eq-bounce 1s ease-in-out infinite;
+}
+.eq span:nth-child(1) { animation-delay: 0s;    height: 60%; }
+.eq span:nth-child(2) { animation-delay: 0.25s; height: 95%; }
+.eq span:nth-child(3) { animation-delay: 0.5s;  height: 45%; }
+.eq span:nth-child(4) { animation-delay: 0.12s; height: 80%; }
+@keyframes eq-bounce {
+  0%, 100% { transform: scaleY(0.4); }
+  50%      { transform: scaleY(1); }
+}
+
+.np-info {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--layout-unit) * 1.4);
+}
+
+.np-status {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--layout-unit) * 1.4);
+  font-size: var(--font-label);
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: var(--accent-color);
+}
+.np-dot {
+  width: calc(var(--layout-unit) * 1.6);
+  height: calc(var(--layout-unit) * 1.6);
+  border-radius: 50%;
+  background: var(--accent-color);
+  animation: pulse 2s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.3; }
+}
+
+.hero-value,
+.np-title {
+  font-size: var(--font-hero);
+  font-weight: 700;
+  line-height: 1.12;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+.np-artist {
+  font-size: var(--font-artist);
+  font-weight: 600;
+  opacity: 0.85;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.np-album {
+  font-size: var(--font-album);
+  opacity: 0.55;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.np-meta {
+  font-size: var(--font-meta);
+  opacity: 0.45;
+  font-variant-numeric: tabular-nums;
+}
+
+/* =========================================================
+   Responsive layouts
+   ========================================================= */
+
+@media (min-width: 680px) and (max-width: 712px) and (min-height: 416px) {
+  :root { --layout-unit: var(--device-vertical-s-unit); }
+}
+@media (min-width: 180px) and (max-width: 360px) and (max-aspect-ratio: 0.9) {
+  :root { --layout-unit: var(--preview-vertical-s-unit); }
+}
+
+/* Short wide landscape — S-H (840x344): smaller art, tighter text */
+@media (min-aspect-ratio: 2.2) and (max-height: 400px) {
+  :root {
+    --art-size: calc(var(--layout-unit) * 70);
+    --font-hero: calc(var(--layout-unit) * 8.5);
+  }
+  .np-album, .np-meta { display: none; }
+  .np-layout { gap: calc(var(--layout-unit) * 8); }
+}
+
+/* Wide landscape — L-H / XL-H: room for everything, bigger type */
+@media (min-aspect-ratio: 2.2) and (min-height: 401px) {
+  :root {
+    --font-hero: calc(var(--layout-unit) * 9);
+    --font-artist: calc(var(--layout-unit) * 5.5);
+  }
+  .np-layout {
+    max-width: 88%;
+    margin: 0 auto;
+  }
+}
+
+/* Portrait: art on top, text below, centered */
+@media (orientation: portrait) {
+  .np-layout {
+    flex-direction: column;
+    justify-content: center;
+    text-align: center;
+    gap: calc(var(--layout-unit) * 4);
+  }
+  .art-wrap { max-width: 70%; width: calc(var(--layout-unit) * 48); height: auto; aspect-ratio: 1; }
+  .np-info { align-items: center; flex: 0 0 auto; }
+  .np-status { justify-content: center; }
+}
+
+/* Tall portrait — L-V / XL-V: cap art size, center vertically */
+@media (max-aspect-ratio: 0.5) {
+  .art-wrap { width: calc(var(--layout-unit) * 60); max-width: 80%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
