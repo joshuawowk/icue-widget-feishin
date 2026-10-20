@@ -1,0 +1,9 @@
+<!doctype html><meta charset="utf-8"><link rel="stylesheet" href="gallery.css">
+<div class="head">
+  <h2>Reads your <span class="accent">Navidrome</span> server directly</h2>
+  <p class="sub">Feishin is a client. This widget asks the server it points at what is playing.</p>
+</div>
+<div class="flow"><div class="box">Xeneon Edge widget<small>This widget, in iCUE</small></div><div class="link">Subsonic API, getNowPlaying<div class="line"></div>Salted-token auth</div><div class="box">Navidrome or Subsonic server<small>Feishin and other clients scrobble here</small></div></div>
+<div class="steps"><div class="step"><div class="num">1</div><b>Import</b><br>Open the .icuewidget file, or use Widgets, then + in iCUE.</div><div class="step"><div class="num">2</div><b>Enter your server</b><br>Type the Navidrome Server URL, HTTPS recommended.</div><div class="step"><div class="num">3</div><b>Sign in</b><br>Username and password; a dedicated read-only user works well.</div></div>
+<div class="note"><b>Network permission:</b> any host, because the server URL is whatever you type. The server must send CORS headers on /rest (Navidrome does by default). Requires iCUE 5.52 or later.</div>
+<div class="foot"><span>Unofficial widget for Feishin. Not affiliated with or endorsed by the Feishin project. MIT.</span><span>Windows, iCUE 5.52+, Xeneon Edge</span></div>
