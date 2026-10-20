@@ -4,29 +4,29 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>tr('Feishin Now Playing')</title>
-  <link rel="icon" type="image/svg+xml" href="resources/icon.svg">
+  <link rel="icon" type="image/svg+xml" href="resources/icon.svg" />
 
-  <meta name="x-icue-restrictions" data-restrictions='[{ "device": "dashboard_lcd" }]'>
-  <meta name="x-icue-widget-group" content="tr('Media')">
+  <meta name="x-icue-restrictions" data-restrictions='[{ "device": "dashboard_lcd" }]' />
+  <meta name="x-icue-widget-group" content="tr('Media')" />
 
   <script type="text/javascript" src="../common/tools/media_viewer/MediaViewer.js"></script>
-  <link rel="stylesheet" type="text/css" href="../common/tools/media_viewer/MediaViewer.css">
+  <link rel="stylesheet" type="text/css" href="../common/tools/media_viewer/MediaViewer.css" />
   <script type="text/javascript" src="scripts/md5.js"></script>
 
   <!-- Feature properties -->
-  <meta name="x-icue-property" content="serverUrl" data-label="tr('Navidrome Server URL')" data-type="textfield" data-default="'https://navidrome.jwowk.net'">
-  <meta name="x-icue-property" content="username" data-label="tr('Username')" data-type="textfield" data-default="''">
-  <meta name="x-icue-property" content="password" data-label="tr('Password')" data-type="textfield" data-default="''">
-  <meta name="x-icue-property" content="onlyMyPlays" data-label="tr('Only My Plays')" data-type="switch" data-default="true">
-  <meta name="x-icue-property" content="refreshSeconds" data-label="tr('Refresh Interval')" data-type="slider" data-default="10" data-min="5" data-max="60" data-step="5" data-unit-label="'s'">
+  <meta name="x-icue-property" content="serverUrl" data-label="tr('Navidrome Server URL')" data-type="textfield" data-default="'https://navidrome.jwowk.net'" />
+  <meta name="x-icue-property" content="username" data-label="tr('Username')" data-type="textfield" data-default="''" />
+  <meta name="x-icue-property" content="password" data-label="tr('Password')" data-type="textfield" data-default="''" />
+  <meta name="x-icue-property" content="onlyMyPlays" data-label="tr('Only My Plays')" data-type="switch" data-default="true" />
+  <meta name="x-icue-property" content="refreshSeconds" data-label="tr('Refresh Interval')" data-type="slider" data-default="10" data-min="5" data-max="60" data-step="5" data-unit-label="'s'" />
 
   <!-- Widget Personalization -->
-  <meta name="x-icue-property" content="textColor" data-label="tr('Text Color')" data-type="color" data-default="'#ffffff'">
-  <meta name="x-icue-property" content="accentColor" data-label="tr('Accent Color')" data-type="color" data-default="'#22d3ee'">
-  <meta name="x-icue-property" content="backgroundColor" data-label="tr('Background Color')" data-type="color" data-default="'#15161c'">
-  <meta name="x-icue-property" content="backgroundMedia" data-label="tr('Background Image')" data-type="media-selector" data-filters="['*.png','*.jpg','*.jpeg','*.webp']">
-  <meta name="x-icue-property" content="glassBlur" data-label="tr('Glass Blur')" data-type="slider" data-default="0" data-min="0" data-max="30" data-step="1">
-  <meta name="x-icue-property" content="transparency" data-label="tr('Background Transparency')" data-type="slider" data-default="100" data-min="0" data-max="100" data-step="1" data-unit-label="'%'">
+  <meta name="x-icue-property" content="textColor" data-label="tr('Text Color')" data-type="color" data-default="'#ffffff'" />
+  <meta name="x-icue-property" content="accentColor" data-label="tr('Accent Color')" data-type="color" data-default="'#22d3ee'" />
+  <meta name="x-icue-property" content="backgroundColor" data-label="tr('Background Color')" data-type="color" data-default="'#15161c'" />
+  <meta name="x-icue-property" content="backgroundMedia" data-label="tr('Background Image')" data-type="media-selector" data-filters="['*.png','*.jpg','*.jpeg','*.webp']" />
+  <meta name="x-icue-property" content="glassBlur" data-label="tr('Glass Blur')" data-type="slider" data-default="0" data-min="0" data-max="30" data-step="1" />
+  <meta name="x-icue-property" content="transparency" data-label="tr('Background Transparency')" data-type="slider" data-default="100" data-min="0" data-max="100" data-step="1" data-unit-label="'%'" />
 
   <script id="x-icue-groups" type="application/json">
   [
@@ -35,7 +35,7 @@
   ]
   </script>
 
-  <link rel="stylesheet" type="text/css" href="styles/FeishinNowPlaying.css">
+  <link rel="stylesheet" type="text/css" href="styles/FeishinNowPlaying.css" />
 </head>
 <body>
   <div class="widget-root">
