@@ -5,6 +5,6 @@
   "description": "Build scripts for the Feishin Now Playing iCUE widget (requires icuewidget-cli)",
   "scripts": {
     "validate": "icuewidget validate .",
-    "package": "icuewidget package . -o dist/feishin-now-playing.icuewidget"
+    "package": "node tools/package.js"
   }
 }
